@@ -35,10 +35,89 @@ edges <- lines_to_lsn(
 
 # . Observed and predicted points ----
 # .. Observed sites ----
-obs_points <- st_read("GIS/sites/otego_sites_elevation.shp")
+obs_points <- st_read("GIS/sites/bkt-hsi-elevations.shp")
+
+# ... Renaming columns ----
+names(obs_points) <- gsub(pattern = "\\.", 
+                          replacement = "",
+                          x = names(obs_points))
+
+
+# ... Calculating HSIs ----
+obs_points <- obs_points %>%
+  mutate(across(
+    .cols = 20:33,  # only numeric columns
+    ~ if_else(
+      is.na(.),
+      mean(., na.rm = TRUE),  # column mean
+      .
+    )
+  ))
+                     
+# Variables
+v1 <- obs_points$V1
+v3 <- obs_points$V3
+v4 <- obs_points$V4
+v6A <- obs_points$V6A
+v6B <- obs_points$V6B
+v8 <- obs_points$V8
+v9 <- obs_points$V9
+v10 <- obs_points$V10
+v11 <- obs_points$V11
+v12 <- obs_points$V12
+v13 <- obs_points$V13
+v14 <- 1
+v15 <- obs_points$V15
+v16 <- obs_points$V16
+v17 <- obs_points$V17
+
+
+# .... Other ----
+CO <- ((((v9*v16)^(1/2) + v11)/2) * 
+         (v1*v3*v12*v13*v14*v17)^(1/6))^(1/2)
+
+# .... Adult ----
+CA <- vector(mode = "numeric", length = length(v4))
+
+CA[v6A > (v10 * v15)^(1/2)] <- ((v4 * v6A * ((v10 *v15)^(1/2))^(1/3)))[v6A > (v10 * v15)^(1/2)]
+CA[v6A < (v10 * v15)^(1/2)] <- ((v4 * ((v10 *v15)^(1/2))^(1/2)))[v6A < (v10 * v15)^(1/2)]
+CA[(v4 <= 0.4) | ((v10 * v15)^(1/2) <= 0.4) ] <- min(CA)
+CA <- (CA * CO) ^ (1/2)
+
+# .... Juvenile ----
+CJ <- (v6B + v10 + v15)/3
+CJ[(v6B <= 0.4) | (v10 <= 0.4) | (v15 <= 0.4) ] <- min(CJ)
+CJ <- (CJ * CO) ^ (1/2)
+
+# .... Fry ----
+CF <- (v10*((v8 * v16)^(1/2)))^(1/2)
+CF[(v10 <= 0.4) | ((v8 * v16)^(1/2) <= 0.4) ] <- min(CF)
+CF <- (CF * CO) ^ (1/2)
+
+# .... Combined HSI ----
+# Formula
+HSI <- (CA * CJ * CF * CO)^(1/4)
+
+# Conditions
+for(i in 1:length(HSI)){
+  if(CA[i] <= 0.4 | CJ[i] <= 0.4 | CF[i] <= 0.4 ){
+    HSI[i] <- min(CA[i], CJ[i], CF[i])
+  }
+}
+
+HSI[CA <= HSI] <- CA
+
+
+# .... Add HSIs to the obs_points ----
+obs_points$CA <- CA
+obs_points$CJ <- CJ
+obs_points$CF <- CF
+obs_points$HSI <- HSI
+
 
 # .. Prediction sites ----
-preds <- st_read("GIS/mid_atlantic_preds/otego_preds_elevation.shp")
+preds <- st_read("GIS/mid_atlantic_preds/otego_preds_muahaha.shp")
+
 
 # Prepare LSN (landscape network) ----
 # . Add observation sites to lsn ----
@@ -145,9 +224,9 @@ ssn_create_distmat(
 
 # Fit a test model ----
 # SAMPLE_1 is elevation
-# Method is eDNA or Electrofishing
+# Method is eDNA or Electrofishinghttp://127.0.0.1:11869/graphics/49df2473-481b-4516-8e41-22039ac9ef15.png
 ssn_mod <- ssn_glm(
-  formula = Elevation1 ~ 1,
+  formula = CA ~ Elevation1,
   ssn.object = covariate_ssn,
   family = "gaussian",
   tailup_type = "exponential",
@@ -173,10 +252,11 @@ plotter <- aug_preds %>%
   arrange(.fitted)
 
 bkt_plot <- ggplot() +
-  geom_sf(data = covariate_ssn$edges) +
   geom_sf(data = plotter, aes(color = .fitted), 
-          size = 3) +
-  scale_color_viridis_c(limits = c(250, 600), option = "H") +
+          size = 3, alpha = 0.5) +
+  geom_sf(data = covariate_ssn$edges) +
+  geom_sf(data = obs_points) +
+  scale_color_viridis_c(limits = c(0, 1), option = "H") +
   labs(color = "") +
   ylab("Latitude") +
   xlab("Longitude") +
@@ -185,7 +265,7 @@ bkt_plot <- ggplot() +
 bkt_plot
 
 # Write plot to file 
-jpeg(filename = "bkt_preds.jpg",
+jpeg(filename = "CA_preds.jpg",
      res = 300,
      height = 2400,
      width = 1800)
