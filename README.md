@@ -18,7 +18,7 @@ This repository holds files and code for modeling Brook Trout (*Salvelinus fonti
 
 `Literature/` Directory for pertinent documents related to data collection or analysis.
 
-`results/` Directory for figures generated from the analysis.
+`results/` Directory for figures generated from the analysis. These are spatial predictions for a variety of habitat measurements, as well as specific HSI components (C) for adults (A), fry (F), and juveniles (J).
 
 `otego_habitat_ssn2.R` The R script used to compile observed site data, prediction site data, and the LSN into a spatial stream network (SSN) object and conduct SSN regression analysis for American eel in the upper Susquehanna River watershed.
 
