@@ -1,5 +1,5 @@
 # Otego Creek Brook Trout Habitat Modeling
-This repository holds files and code for modeling Brook Trout (*Salvelinus fontinalis*) habitat in Otego Creek, NY. Data for this project were collected by Braeden Victory, Caitlin Brislin, and Dan Stich through the SUNY Oneonta Biological Field Station summer internship program in summer 2026. All work was done in coordination with New York State Department of Environmental Conservation. 
+This repository holds files and code for modeling Brook Trout (*Salvelinus fontinalis*) habitat in Otego Creek, NY. Data for this project were collected by Braeden Victory, Caitlin Brislin, and Dan Stich through the SUNY Oneonta Biological Field Station summer internship program in summer 2026. All work was done in coordination with New York State Department of Environmental Conservation. Code was adapted from Minissale et al. (in prep) based on examples in the SSN2 package documentation for this specific application within the larger upper Susquehanna River watershed.
 
 # Directories
 `GIS/` holds all georeferenced files necessary for running compiling networks and data, and running spatial stream network models. Directories containing files used in the analysis are described in the list below: 
