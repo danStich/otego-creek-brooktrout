@@ -224,7 +224,7 @@ ssn_create_distmat(
 
 # Fit a test model ----
 # SAMPLE_1 is elevation
-# Method is eDNA or Electrofishinghttp://127.0.0.1:11869/graphics/49df2473-481b-4516-8e41-22039ac9ef15.png
+# Method is eDNA or Electrofishing
 ssn_mod <- ssn_glm(
   formula = CA ~ Elevation1,
   ssn.object = covariate_ssn,
